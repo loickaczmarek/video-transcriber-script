@@ -13,7 +13,7 @@ BLUE='\033[0;34m'
 NC='\033[0m' # No Color
 
 # Configuration par défaut
-DEFAULT_WHISPER_MODEL="base"
+DEFAULT_WHISPER_MODEL="turbo"
 DEFAULT_LANGUAGE="fr"
 DEFAULT_OUTPUT="transcription.txt"
 DEFAULT_SUMMARY="resume.txt"

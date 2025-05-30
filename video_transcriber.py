@@ -244,22 +244,27 @@ def check_ollama_model(model, ollama_url="http://localhost:11434"):
 
 def main():
     parser = argparse.ArgumentParser(description="Télécharge, transcrit et résume une vidéo YouTube avec Ollama")
-    parser.add_argument("url", help="URL de la vidéo YouTube")
-    parser.add_argument("--whisper-model", default="turbo", choices=["medium", "large", "turbo"], help="Modèle Whisper à utiliser")
+    parser.add_argument("url", nargs='?', help="URL de la vidéo YouTube (optionnel si --transcription fourni)")
+    parser.add_argument("--whisper-model", default="turbo", choices=["tiny", "base", "small", "medium", "large", "turbo"], help="Modèle Whisper à utiliser")
     parser.add_argument("--language", default="fr", help="Langue de transcription (code ISO 639-1)")
     parser.add_argument("--output", default="transcription.txt", help="Fichier de sortie pour la transcription")
     parser.add_argument("--summary", default="resume.txt", help="Fichier de sortie pour le résumé")
     parser.add_argument("--ollama-model", default="qwen2.5:7b", help="Modèle Ollama à utiliser (recommandé: qwen2.5:14b, llama3.2:3b, mistral:7b)")
     parser.add_argument("--ollama-url", default="http://localhost:11434", help="URL du serveur Ollama")
-    parser.add_argument("--transcription", default="transcription.txt", help="Fichier de transcription existant")
+    parser.add_argument("--transcription", help="Fichier de transcription existant")
     
     args = parser.parse_args()
+    
+    # Vérifier que les paramètres sont cohérents
+    if not args.transcription and not args.url:
+        print("Erreur: URL YouTube ou fichier de transcription requis")
+        sys.exit(1)
     
     # Vérifier que le modèle Ollama est disponible
     if not check_ollama_model(args.ollama_model, args.ollama_url):
         sys.exit(1)
 
-    if os.path.exists(args.transcription):
+    if args.transcription and os.path.exists(args.transcription):
         with open(args.transcription, 'r') as f:
             existing_transcription = f.read()
         # Obtenir un résumé via Ollama
@@ -274,7 +279,7 @@ def main():
         else:
             print("Échec de l'obtention du résumé depuis Ollama")
 
-    else:
+    elif args.url:
         print(f"Téléchargement de la vidéo: {args.url}")
         audio_file = download_audio(args.url)
 
@@ -300,7 +305,12 @@ def main():
             print("Échec de l'obtention du résumé depuis Ollama")
 
         # Nettoyer le fichier audio
-        os.remove(audio_file)
+        if audio_file and os.path.exists(audio_file):
+            os.remove(audio_file)
+    
+    else:
+        print("Erreur: Fichier de transcription non trouvé ou URL invalide")
+        sys.exit(1)
 
     sys.exit(0)
 
